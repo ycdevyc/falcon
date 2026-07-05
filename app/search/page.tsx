@@ -1,77 +1,99 @@
-import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import Link from "next/link"
+import Link from "next/link";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/lib/supabase";
 
-export default function SearchPage() {
+export const dynamic = "force-dynamic";
+
+type Vehicle = {
+  id: string;
+  name: string;
+  capacity: number;
+  price: number;
+  active: boolean;
+};
+
+export default async function SearchPage() {
+  const { data: vehicles, error } = await supabase
+    .from("vehicles")
+    .select("*")
+    .eq("active", true)
+    .order("price", { ascending: true });
+
+  if (error) {
+    return (
+      <div className="min-h-screen p-6">
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-3xl font-bold mb-4">
+            Available Transfers
+          </h1>
+
+          <div className="border rounded-lg p-4 bg-red-50">
+            <p className="font-semibold text-red-600">
+              Error loading vehicles
+            </p>
+
+            <p className="mt-2 text-sm">{error.message}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background p-6">
-      
       <div className="max-w-4xl mx-auto space-y-6">
 
         <div>
-          <h1 className="text-3xl font-bold">Available Transfers</h1>
+          <h1 className="text-3xl font-bold">
+            Available Transfers
+          </h1>
+
           <p className="text-muted-foreground">
             Antalya Airport → Hotel
           </p>
         </div>
 
-        {/* Results */}
         <div className="space-y-4">
 
-          <Card className="p-4 flex justify-between items-center">
-            <div>
-              <p className="font-semibold">Mercedes Vito</p>
-              <p className="text-sm text-muted-foreground">
-                4 passengers • Private transfer
-              </p>
-            </div>
-            <div className="text-right space-y-2">
-              <p className="font-bold">€45</p>
-              
-              <Link href="/book?vehicle=mercedes-vito&price=45">
-                <Button>Book</Button>
-              </Link>
+          {vehicles?.map((vehicle: Vehicle) => (
+            <Card
+              key={vehicle.id}
+              className="p-4 flex justify-between items-center"
+            >
+              <div>
+                <p className="font-semibold">
+                  {vehicle.name}
+                </p>
 
-            </div>
-          </Card>
+                <p className="text-sm text-muted-foreground">
+                  Up to {vehicle.capacity} passengers • Private transfer
+                </p>
+              </div>
 
-          <Card className="p-4 flex justify-between items-center">
-            <div>
-              <p className="font-semibold">Mercedes V-Class</p>
-              <p className="text-sm text-muted-foreground">
-                Luxury • 6 passengers
-              </p>
-            </div>
-            <div className="text-right space-y-2">
-              <p className="font-bold">€65</p>
+              <div className="text-right space-y-2">
 
-              <Link href="/book?vehicle=mercedes-v-class&price=65">
-                <Button>Book</Button>
-              </Link>
+                <p className="font-bold">
+                  €{vehicle.price}
+                </p>
 
-            </div>
-          </Card>
+                <Link
+                  href={`/book?vehicle=${encodeURIComponent(
+                    vehicle.name
+                  )}&price=${vehicle.price}`}
+                >
+                  <Button>
+                    Book
+                  </Button>
+                </Link>
 
-          <Card className="p-4 flex justify-between items-center">
-            <div>
-              <p className="font-semibold">Minibus</p>
-              <p className="text-sm text-muted-foreground">
-                8–12 passengers
-              </p>
-            </div>
-            <div className="text-right space-y-2">
-              <p className="font-bold">€80</p>
-
-              <Link href="/book?vehicle=minibus&price=80">
-                <Button>Book</Button>
-              </Link>
-
-            </div>
-          </Card>
+              </div>
+            </Card>
+          ))}
 
         </div>
 
       </div>
     </div>
-  )
+  );
 }
