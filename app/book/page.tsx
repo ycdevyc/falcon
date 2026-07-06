@@ -21,64 +21,64 @@ export default function BookPage() {
   const [flightNumber, setFlightNumber] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function createBooking() {
+  async function createRideRequest() {
     setLoading(true);
 
-    try {
-      const { error } = await supabase
-        .from("bookings")
-        .insert({
-          customer_name: customerName,
-          phone,
-          email,
-          flight_number: flightNumber,
-          vehicle,
-          total_price: price,
-          status: "pending",
-        });
+    console.log("🚀 INSERT TARGET = ride_requests");
 
-      if (error) {
-        console.error(error);
-        alert(error.message);
-        return;
-      }
+    const payload = {
+      customer_name: customerName,
+      phone,
+      email,
+      flight_number: flightNumber,
+      pickup_location: "Antalya Airport",
+      dropoff_location: "Hotel",
+      vehicle_id: null,
+      status: "pending",
+    };
 
-      alert("✅ Booking successfully created!");
+    console.log("📦 payload:", payload);
 
-      setCustomerName("");
-      setPhone("");
-      setEmail("");
-      setFlightNumber("");
-    } catch (err) {
-      console.error(err);
-      alert("Unexpected error. Check the browser console.");
-    } finally {
-      setLoading(false);
+    const { data, error, status, statusText } = await supabase
+      .from("ride_requests")   // 🔥 HARD FIX: ONLY THIS TABLE
+      .insert(payload)
+      .select();
+
+    console.log("📡 response:", {
+      data,
+      error,
+      status,
+      statusText,
+    });
+
+    setLoading(false);
+
+    if (error) {
+      alert("ERROR: " + error.message);
+      return;
     }
+
+    alert("✅ Ride request saved in NEW system!");
+
+    setCustomerName("");
+    setPhone("");
+    setEmail("");
+    setFlightNumber("");
   }
 
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-2xl mx-auto space-y-6">
+
         <div>
           <h1 className="text-3xl font-bold">
-            Complete your booking
+            Complete your ride request
           </h1>
 
           <p className="text-muted-foreground">
-            Secure your airport transfer in seconds
+            {vehicle} • €{price}
           </p>
         </div>
-
-        <Card className="p-4 space-y-2">
-          <p className="font-semibold">{vehicle}</p>
-
-          <p className="text-sm text-muted-foreground">
-            Antalya Airport → Hotel
-          </p>
-
-          <p className="font-bold">€{price}</p>
-        </Card>
 
         <Card className="p-4 space-y-4">
           <Input
@@ -100,7 +100,7 @@ export default function BookPage() {
           />
 
           <Input
-            placeholder="Flight number (optional)"
+            placeholder="Flight number"
             value={flightNumber}
             onChange={(e) => setFlightNumber(e.target.value)}
           />
@@ -108,11 +108,12 @@ export default function BookPage() {
           <Button
             className="w-full"
             disabled={loading}
-            onClick={createBooking}
+            onClick={createRideRequest}
           >
-            {loading ? "Saving..." : "Confirm Booking"}
+            {loading ? "Saving..." : "Confirm Ride Request"}
           </Button>
         </Card>
+
       </div>
     </div>
   );
